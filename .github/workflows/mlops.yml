@@ -57,11 +57,15 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+        run: |
+          # Parse JSON tu secret CLOUD_CREDENTIALS (de tuong thich voi format bai lab)
+          export AK=$(echo '${{ secrets.CLOUD_CREDENTIALS }}' | python3 -c "import sys, json; print(json.load(sys.stdin)['aws_access_key_id'])")
+          export SK=$(echo '${{ secrets.CLOUD_CREDENTIALS }}' | python3 -c "import sys, json; print(json.load(sys.stdin)['aws_secret_access_key'])")
+          
+          # Ghi vao GITHUB_ENV de dvc va aws cli co the su dung trong cac buoc sau
+          echo "AWS_ACCESS_KEY_ID=$AK" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=$SK" >> $GITHUB_ENV
+          echo "AWS_DEFAULT_REGION=ap-southeast-1" >> $GITHUB_ENV
 
       - name: Pull data with DVC
         # TODO 3: Pull cac file du lieu can thiet tu cloud storage bang lenh dvc pull.
